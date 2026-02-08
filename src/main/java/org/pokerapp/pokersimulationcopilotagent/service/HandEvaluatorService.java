@@ -52,17 +52,18 @@ public class HandEvaluatorService {
 
         boolean isFlush = isFlush(sortedCards);
         boolean isStraight = isStraight(sortedCards);
+        boolean isWheel = isWheel(sortedCards);
         Map<Rank, Integer> rankCounts = countRanks(sortedCards);
 
         // Royal Flush
-        if (isFlush && isStraight && sortedCards.get(0).getRank() == Rank.ACE) {
+        if (isFlush && isStraight && sortedCards.get(0).getRank() == Rank.ACE && !isWheel) {
             return new HandEvaluation(HandRank.ROYAL_FLUSH, List.of(Rank.ACE.getValue()));
         }
 
         // Straight Flush
         if (isFlush && isStraight) {
-            return new HandEvaluation(HandRank.STRAIGHT_FLUSH,
-                    List.of(sortedCards.get(0).getRank().getValue()));
+            int straightHighCard = isWheel ? Rank.FIVE.getValue() : sortedCards.get(0).getRank().getValue();
+            return new HandEvaluation(HandRank.STRAIGHT_FLUSH, List.of(straightHighCard));
         }
 
         // Four of a Kind
@@ -96,8 +97,8 @@ public class HandEvaluatorService {
 
         // Straight
         if (isStraight) {
-            return new HandEvaluation(HandRank.STRAIGHT,
-                    List.of(sortedCards.get(0).getRank().getValue()));
+            int straightHighCard = isWheel ? Rank.FIVE.getValue() : sortedCards.get(0).getRank().getValue();
+            return new HandEvaluation(HandRank.STRAIGHT, List.of(straightHighCard));
         }
 
         // Three of a Kind
@@ -175,13 +176,17 @@ public class HandEvaluatorService {
         }
 
         // Check for A-2-3-4-5 (wheel)
-        boolean wheelStraight = sorted.get(0).getRank() == Rank.ACE &&
-                sorted.get(1).getRank() == Rank.FIVE &&
-                sorted.get(2).getRank() == Rank.FOUR &&
-                sorted.get(3).getRank() == Rank.THREE &&
-                sorted.get(4).getRank() == Rank.TWO;
+        boolean wheelStraight = isWheel(sorted);
 
         return regularStraight || wheelStraight;
+    }
+
+    private boolean isWheel(List<Card> cards) {
+        return cards.get(0).getRank() == Rank.ACE &&
+                cards.get(1).getRank() == Rank.FIVE &&
+                cards.get(2).getRank() == Rank.FOUR &&
+                cards.get(3).getRank() == Rank.THREE &&
+                cards.get(4).getRank() == Rank.TWO;
     }
 
     private Map<Rank, Integer> countRanks(List<Card> cards) {
@@ -220,4 +225,3 @@ public class HandEvaluatorService {
         }
     }
 }
-
